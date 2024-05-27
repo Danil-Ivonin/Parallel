@@ -18,6 +18,9 @@
         "string.h": "c",
         "vec.h": "c",
         "initializer_list": "c",
-        "utility": "c"
+        "utility": "c",
+        "float.h": "c",
+        "cwchar": "c",
+        "random": "c"
     }
 }

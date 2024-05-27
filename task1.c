@@ -4,15 +4,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define ARR_LEN 8000000
+// ARR_LEN 8000000
 
 int main(int argc, char** argv) {
     int rank, size;
+    long int ARR_LEN = 80000000;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    double tstart, tend;
-    
+    double tstart, tend, ttotal;
     int lg2, pow2;
     double chunk = ceil((double)ARR_LEN / size);
     int start = rank * chunk;
@@ -46,10 +46,10 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    tstart = MPI_Wtime();
 
     for (int i = 0; i < lg2; i++)
     {
+        tstart = MPI_Wtime();
         pow2 = pow(2, i);
         
         for (int j = start; j <= end; j++)
@@ -59,10 +59,15 @@ int main(int argc, char** argv) {
             else
                 sums[j-start] = partial_sums[j];
         }
+        tend = MPI_Wtime();
+        if (rank == 0)
+        {
+            double time_taken_parallel = tend - tstart;
+            ttotal += time_taken_parallel;
+        }
         MPI_Allgather(sums, chunk, MPI_LONG, partial_sums, chunk, MPI_LONG, MPI_COMM_WORLD);
     }
 
-    tend = MPI_Wtime();
 
     if (rank == 0)
     {
@@ -79,10 +84,9 @@ int main(int argc, char** argv) {
                 printf("%ld ", partial_sums[i]);
             printf("\n\n"); 
         }
-
-        double time_taken_parallel = tend - tstart;
-        printf("For array size %d\n", ARR_LEN);
-        printf("Time spend parallel = %f\n", time_taken_parallel);
+        
+        printf("For array size %ld\n", ARR_LEN);
+        printf("Time spend parallel = %f\n", ttotal);
     }
     MPI_Finalize();
     return 0;
